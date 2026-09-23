@@ -1,0 +1,1176 @@
+<!DOCTYPE html>
+<html lang="ko" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Family Retail Experience - 백화점 8F·9F 안내</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        meadow: {
+                            50: '#F4F7F2',
+                            100: '#E5EDE1',
+                            200: '#C8D8C2',
+                            300: '#A4BFA2',
+                            400: '#7E9F7C',
+                            500: '#5F855D',
+                            600: '#486846',
+                            700: '#385237',
+                            800: '#2A3C2A',
+                            900: '#1C2B1C',
+                            950: '#0E170E'
+                        },
+                        sage: {
+                            50: '#F8F9F6',
+                            100: '#EFEFE8',
+                            200: '#DCDCD0',
+                            300: '#C1C2AF',
+                            400: '#9E9F8A',
+                            500: '#7A7A66',
+                            600: '#5F604E'
+                        },
+                        forest: '#1C3B2B',
+                        skywarm: '#EBF1E9',
+                        cream: '#FAF8F3',
+                        wood: '#8C6D53'
+                    },
+                    fontFamily: {
+                        sans: ['Noto Sans KR', 'sans-serif'],
+                        outfit: ['Outfit', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Leaflet.js Free OpenStreetMap Library CDN -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #F4F7F2;
+            color: #1C2B1C;
+            overflow-x: hidden;
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(28, 59, 43, 0.08);
+            box-shadow: 0 10px 30px -10px rgba(28, 59, 43, 0.05);
+        }
+
+        .glass-panel-hover {
+            transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .glass-panel-hover:hover {
+            background: rgba(255, 255, 255, 0.92);
+            border-color: rgba(95, 133, 93, 0.3);
+            transform: translateY(-4px);
+            box-shadow: 0 16px 36px -12px rgba(28, 59, 43, 0.12);
+        }
+
+        .gradient-text-forest {
+            background: linear-gradient(135deg, #1C3B2B 0%, #385237 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .gradient-text-earth {
+            background: linear-gradient(135deg, #5F855D 0%, #8C6D53 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Perspective Flip Effect for Cards */
+        .perspective-1000 {
+            perspective: 1000px;
+        }
+        .flip-card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            transform-style: preserve-3d;
+        }
+        .flip-card:hover .flip-card-inner {
+            transform: rotateY(180deg);
+        }
+        .flip-card-front, .flip-card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            border-radius: 1.25rem;
+        }
+        .flip-card-back {
+            transform: rotateY(180deg);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #E5EDE1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #5F855D;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #385237;
+        }
+
+        /* Modal Overlay Transition */
+        .modal-active {
+            opacity: 1 !important;
+            pointer-events: auto !important;
+        }
+
+        /* View Transition Animation */
+        .view-section {
+            display: none;
+            opacity: 0;
+            transition: opacity 0.4s ease-in-out;
+        }
+        .view-section.active {
+            display: block;
+            opacity: 1;
+        }
+
+        .pulsing-dot {
+            animation: pulse 2.5s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(95, 133, 93, 0.6); }
+            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(95, 133, 93, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(95, 133, 93, 0); }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between selection:bg-meadow-200 selection:text-forest">
+
+    <!-- Header Navigation -->
+    <header class="fixed top-0 left-0 w-full z-50 glass-panel border-b border-meadow-900/10 transition-all duration-300" id="main-header">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            <!-- Logo -->
+            <a href="#" onclick="switchView('home'); return false;" class="flex items-center space-x-3 group">
+                <div class="w-10 h-10 rounded-xl bg-forest flex items-center justify-center font-outfit font-extrabold text-xl text-cream shadow-md group-hover:scale-105 transition-transform">
+                    CX
+                </div>
+                <div>
+                    <span class="font-outfit font-bold text-lg tracking-wider text-forest block">FAMILY RETAIL</span>
+                    <span class="text-xs text-meadow-600 font-semibold block -mt-1">백화점 8F · 9F CX</span>
+                </div>
+            </a>
+
+            <!-- Desktop Nav Links -->
+            <nav class="hidden md:flex items-center space-x-1 lg:space-x-2">
+                <button onclick="switchView('home')" id="nav-home" class="nav-btn px-4 py-2 rounded-xl text-sm font-semibold transition-all text-forest bg-meadow-100">
+                    <i class="fa-solid fa-house mr-1.5 text-meadow-600"></i> 홈
+                </button>
+                <button onclick="switchView('floors')" id="nav-floors" class="nav-btn px-4 py-2 rounded-xl text-sm font-semibold text-meadow-900/70 hover:text-forest hover:bg-white/60 transition-all">
+                    <i class="fa-solid fa-layer-group mr-1.5 text-meadow-500"></i> 층별 안내
+                </button>
+                <button onclick="switchView('events')" id="nav-events" class="nav-btn px-4 py-2 rounded-xl text-sm font-semibold text-meadow-900/70 hover:text-forest hover:bg-white/60 transition-all">
+                    <i class="fa-solid fa-bullhorn mr-1.5 text-wood"></i> 이벤트 구역
+                </button>
+                <button onclick="switchView('map')" id="nav-map" class="nav-btn px-4 py-2 rounded-xl text-sm font-semibold text-meadow-900/70 hover:text-forest hover:bg-white/60 transition-all">
+                    <i class="fa-solid fa-location-dot mr-1.5 text-meadow-600"></i> 오시는 길
+                </button>
+            </nav>
+
+            <!-- Quick Action CTA -->
+            <div class="hidden lg:flex items-center space-x-3">
+                <a href="#floor-quick" onclick="switchView('floors')" class="px-5 py-2.5 text-xs font-bold rounded-xl bg-forest text-cream shadow-sm hover:bg-meadow-800 transition-all">
+                    8F/9F 구역보기
+                </a>
+            </div>
+
+            <!-- Mobile Hamburger Button -->
+            <button id="mobile-menu-btn" class="md:hidden p-2 rounded-xl text-forest hover:bg-white/60 focus:outline-none">
+                <i class="fa-solid fa-bars text-xl"></i>
+            </button>
+        </div>
+
+        <!-- Mobile Menu Drawer -->
+        <div id="mobile-menu" class="hidden md:hidden glass-panel border-t border-meadow-900/10 px-4 pt-2 pb-6 space-y-2">
+            <button onclick="switchView('home'); toggleMobileMenu();" class="block w-full text-left px-4 py-3 rounded-xl text-base font-semibold text-forest hover:bg-meadow-100">
+                <i class="fa-solid fa-house w-6 text-meadow-600"></i> 홈
+            </button>
+            <button onclick="switchView('floors'); toggleMobileMenu();" class="block w-full text-left px-4 py-3 rounded-xl text-base font-semibold text-meadow-900 hover:bg-meadow-100">
+                <i class="fa-solid fa-layer-group w-6 text-meadow-600"></i> 층별 안내 (8F·9F)
+            </button>
+            <button onclick="switchView('events'); toggleMobileMenu();" class="block w-full text-left px-4 py-3 rounded-xl text-base font-semibold text-meadow-900 hover:bg-meadow-100">
+                <i class="fa-solid fa-bullhorn w-6 text-wood"></i> 이벤트 구역
+            </button>
+            <button onclick="switchView('map'); toggleMobileMenu();" class="block w-full text-left px-4 py-3 rounded-xl text-base font-semibold text-meadow-900 hover:bg-meadow-100">
+                <i class="fa-solid fa-location-dot w-6 text-meadow-700"></i> 오시는 길
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content Container for SPA -->
+    <main class="pt-20 flex-grow">
+
+        <!-- ========================================== -->
+        <!-- VIEW 1: HOME PAGE                          -->
+        <!-- ========================================== -->
+        <section id="view-home" class="view-section active">
+            <!-- Hero Banner -->
+            <div class="relative min-h-[88vh] flex items-center justify-center overflow-hidden border-b border-meadow-900/10">
+                <!-- Background Nature Meadow Visual -->
+                <div class="absolute inset-0 bg-gradient-to-b from-[#DDE8D7] via-[#EFF5EB] to-[#F4F7F2] z-0"></div>
+                
+                <!-- Ambient Meadow Circles -->
+                <div class="absolute -top-12 left-1/4 w-[32rem] h-[32rem] bg-meadow-300/30 rounded-full filter blur-3xl animate-pulse"></div>
+                <div class="absolute bottom-0 right-10 w-[28rem] h-[28rem] bg-sage-200/50 rounded-full filter blur-3xl"></div>
+
+                <!-- Meadow Grass Graphic Accent Overlay -->
+                <div class="absolute bottom-0 inset-x-0 h-40 bg-gradient-to-t from-meadow-500/10 to-transparent pointer-events-none"></div>
+
+                <div class="relative z-10 max-w-5xl mx-auto px-4 py-16 text-center">
+                    <span class="inline-flex items-center px-4 py-1.5 rounded-full text-xs font-bold bg-white/80 text-forest border border-meadow-600/20 shadow-sm mb-6">
+                        <span class="w-2.5 h-2.5 rounded-full bg-meadow-500 mr-2 pulsing-dot"></span> Family CX Department Store 8F · 9F
+                    </span>
+                    
+                    <h1 class="text-4xl sm:text-6xl font-extrabold tracking-tight text-forest mb-4 leading-tight">
+                        자연 속 휴식처럼 편안한 공간,<br>
+                        <span class="font-outfit text-forest block mt-1 tracking-tight text-4xl sm:text-5xl font-extrabold">Come, take a seat.</span>
+                    </h1>
+                    
+                    <p class="text-base sm:text-xl text-meadow-800/80 max-w-2xl mx-auto mb-10 font-medium leading-relaxed">
+                        엄마에게 전하는 깊은 휴식, 아이에게 선사하는 무한한 즐거움.<br class="hidden sm:block">
+                        8F 플레이존과 9F 루프탑 가든 & 카페가 만나는 고품격 리테일 공간입니다.
+                    </p>
+
+                    <div class="flex flex-col sm:flex-row justify-center items-center gap-4">
+                        <button onclick="switchView('floors')" class="w-full sm:w-auto px-8 py-4 rounded-xl bg-forest text-cream font-bold text-base shadow-md hover:bg-meadow-800 hover:scale-[1.02] transition-all flex items-center justify-center">
+                            <i class="fa-solid fa-compass mr-2 text-meadow-300"></i> 층별 공간 둘러보기
+                        </button>
+                        <button onclick="switchView('events')" class="w-full sm:w-auto px-8 py-4 rounded-xl glass-panel text-forest font-bold text-base border border-meadow-900/10 hover:bg-white transition-all flex items-center justify-center">
+                            <i class="fa-solid fa-gift mr-2 text-wood"></i> 오픈 이벤트 혜택
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 백화점 소개 (Concept Overview) -->
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+                <div class="text-center max-w-3xl mx-auto mb-16">
+                    <h2 class="text-xs font-bold uppercase tracking-widest text-meadow-600 mb-2">FAMILY RETAIL EXPERIENCE</h2>
+                    <h3 class="text-3xl font-extrabold text-forest">자연과 사람이 공존하는 CX 공간 컨셉</h3>
+                    <div class="w-12 h-1 bg-meadow-500 mx-auto mt-4 rounded-full"></div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div class="glass-panel p-8 rounded-3xl glass-panel-hover">
+                        <div class="w-14 h-14 rounded-2xl bg-meadow-100 border border-meadow-200 flex items-center justify-center text-forest text-2xl mb-6 shadow-sm">
+                            <i class="fa-solid fa-child-reaching"></i>
+                        </div>
+                        <h4 class="text-xl font-bold text-forest mb-3">안전한 놀이 & 체험</h4>
+                        <p class="text-meadow-900/70 text-sm leading-relaxed">
+                            360도 놀이 시설, 타요 트랙, 티니핑 월드 등 아이들이 자연 친화적인 공간에서 마음껏 뛰어놀 수 있는 전용 어드벤처 구역.
+                        </p>
+                    </div>
+
+                    <div class="glass-panel p-8 rounded-2xl glass-panel-hover">
+                        <div class="w-14 h-14 rounded-2xl bg-sage-100 border border-sage-200 flex items-center justify-center text-forest text-2xl mb-6 shadow-sm">
+                            <i class="fa-solid fa-mug-hot"></i>
+                        </div>
+                        <h4 class="text-xl font-bold text-forest mb-3">엄마를 위한 프리미엄 휴식</h4>
+                        <p class="text-meadow-900/70 text-sm leading-relaxed">
+                            9층 전망 루프탑 카페와 넓은 아웃도어 테라스. 싱그러운 조망과 함께 편안한 티타임과 여유를 만끽하세요.
+                        </p>
+                    </div>
+
+                    <div class="glass-panel p-8 rounded-2xl glass-panel-hover">
+                        <div class="w-14 h-14 rounded-2xl bg-meadow-100 border border-meadow-200 flex items-center justify-center text-forest text-2xl mb-6 shadow-sm">
+                            <i class="fa-solid fa-baby-carriage"></i>
+                        </div>
+                        <h4 class="text-xl font-bold text-forest mb-3">배려 깊은 패밀리 동선</h4>
+                        <p class="text-meadow-900/70 text-sm leading-relaxed">
+                            유아차 전용의 넓은 복도, 아동 전용 식사 공간, 프리미엄 수유실 등 온 가족을 위해 섬세하게 설계된 동선.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 8F / 9F 프리뷰 -->
+            <div class="bg-meadow-100/60 py-20 border-y border-meadow-900/10">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                        <!-- 8F Card -->
+                        <div class="glass-panel rounded-3xl p-8 relative overflow-hidden border border-meadow-300 hover:border-meadow-500 transition-all">
+                            <div class="absolute top-0 right-0 w-32 h-32 bg-meadow-200/40 rounded-bl-full pointer-events-none"></div>
+                            <span class="inline-block px-3.5 py-1 rounded-full text-xs font-bold bg-forest text-cream mb-4 shadow-sm">8F PLAY & SHOP</span>
+                            <h3 class="text-2xl font-bold text-forest mb-3">체험 · 놀이 · 쇼핑 복합 공간</h3>
+                            <p class="text-meadow-900/80 text-sm mb-6 leading-relaxed">
+                                PLAY PLAZA 360도 체험 놀이 시설부터 인기 캐릭터 타요 & 티니핑 존, 유아동 패밀리 리테일까지 아이들의 호기심을 지켜주는 친화적 구역입니다.
+                            </p>
+                            <div class="space-y-2 mb-8">
+                                <div class="flex items-center text-xs font-medium text-forest"><i class="fa-solid fa-check text-meadow-600 mr-2"></i> PLAY PLAZA (360도 어드벤처)</div>
+                                <div class="flex items-center text-xs font-medium text-forest"><i class="fa-solid fa-check text-meadow-600 mr-2"></i> 타요존 (MOVE TRACK 바닥 트랙)</div>
+                                <div class="flex items-center text-xs font-medium text-forest"><i class="fa-solid fa-check text-meadow-600 mr-2"></i> 티니핑 플레이 월드</div>
+                            </div>
+                            <button onclick="switchView('floors'); filterFloor('8F');" class="px-6 py-3 rounded-xl bg-forest hover:bg-meadow-800 text-cream font-bold text-sm transition-colors w-full sm:w-auto shadow-sm">
+                                8F 상세 구역 확인하기
+                            </button>
+                        </div>
+
+                        <!-- 9F Card -->
+                        <div class="glass-panel rounded-3xl p-8 relative overflow-hidden border border-sage-300 hover:border-sage-500 transition-all">
+                            <div class="absolute top-0 right-0 w-32 h-32 bg-sage-200/40 rounded-bl-full pointer-events-none"></div>
+                            <span class="inline-block px-3.5 py-1 rounded-full text-xs font-bold bg-meadow-700 text-cream mb-4 shadow-sm">9F REST & VIEW</span>
+                            <h3 class="text-2xl font-bold text-forest mb-3">휴식 · 맛집 · 뷰가 있는 공간</h3>
+                            <p class="text-meadow-900/80 text-sm mb-6 leading-relaxed">
+                                푸르른 야외 테라스 좌석을 갖춘 패밀리 푸드코트와 8층 놀이공간을 조망할 수 있는 루프탑 VIEW CAFE에서 여유로운 휴식을 즐기세요.
+                            </p>
+                            <div class="space-y-2 mb-8">
+                                <div class="flex items-center text-xs font-medium text-forest"><i class="fa-solid fa-check text-meadow-600 mr-2"></i> 패밀리 푸드코트 (아웃도어 좌석)</div>
+                                <div class="flex items-center text-xs font-medium text-forest"><i class="fa-solid fa-check text-meadow-600 mr-2"></i> VIEW CAFE (9층 전망 루프탑)</div>
+                                <div class="flex items-center text-xs font-medium text-forest"><i class="fa-solid fa-check text-meadow-600 mr-2"></i> Wide Aisles & Stroller Zone</div>
+                            </div>
+                            <button onclick="switchView('floors'); filterFloor('9F');" class="px-6 py-3 rounded-xl bg-meadow-700 hover:bg-meadow-800 text-cream font-bold text-sm transition-colors w-full sm:w-auto shadow-sm">
+                                9F 상세 구역 확인하기
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Features Icon Bar -->
+            <div class="max-w-7xl mx-auto px-4 py-16">
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+                    <div class="p-6 glass-panel rounded-2xl">
+                        <div class="text-3xl text-meadow-600 mb-2"><i class="fa-solid fa-shapes"></i></div>
+                        <h5 class="font-bold text-forest text-base">360도 놀이 공간</h5>
+                        <p class="text-xs text-meadow-900/60 mt-1">어린이 맞춤형 어드벤처</p>
+                    </div>
+                    <div class="p-6 glass-panel rounded-2xl">
+                        <div class="text-3xl text-meadow-600 mb-2"><i class="fa-solid fa-utensils"></i></div>
+                        <h5 class="font-bold text-forest text-base">가족 다이닝</h5>
+                        <p class="text-xs text-meadow-900/60 mt-1">아동 의자 & 이유식 편의</p>
+                    </div>
+                    <div class="p-6 glass-panel rounded-2xl">
+                        <div class="text-3xl text-wood mb-2"><i class="fa-solid fa-road"></i></div>
+                        <h5 class="font-bold text-forest text-base">넓은 복도</h5>
+                        <p class="text-xs text-meadow-900/60 mt-1">유아차 전용 보행 동선</p>
+                    </div>
+                    <div class="p-6 glass-panel rounded-2xl">
+                        <div class="text-3xl text-meadow-700 mb-2"><i class="fa-solid fa-leaf"></i></div>
+                        <h5 class="font-bold text-forest text-base">체험형 리빙</h5>
+                        <p class="text-xs text-meadow-900/60 mt-1">홈·자동차 솔루션 존</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- VIEW 2: FLOORS PAGE                        -->
+        <!-- ========================================== -->
+        <section id="view-floors" class="view-section">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+                <!-- Title Header -->
+                <div class="text-center mb-10">
+                    <h2 class="text-3xl sm:text-4xl font-extrabold text-forest mb-3">층별 구역 안내</h2>
+                    <p class="text-meadow-900/70 text-sm max-w-xl mx-auto">8F과 9F에 위치한 다양한 패밀리 리테일 및 휴식 구역을 확인하세요.</p>
+                </div>
+
+                <!-- Floor Switch Tabs -->
+                <div class="flex justify-center mb-10">
+                    <div class="glass-panel p-1.5 rounded-2xl flex space-x-2 border border-meadow-900/10">
+                        <button id="btn-tab-8F" onclick="filterFloor('8F')" class="px-8 py-3 rounded-xl font-bold text-sm transition-all bg-forest text-cream shadow-md">
+                            8F PLAY & SHOP
+                        </button>
+                        <button id="btn-tab-9F" onclick="filterFloor('9F')" class="px-8 py-3 rounded-xl font-bold text-sm transition-all text-meadow-900/70 hover:text-forest">
+                            9F REST & VIEW
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Isometric Map Visual Showcase Card -->
+                <div class="mb-12 glass-panel p-6 rounded-3xl relative overflow-hidden border border-meadow-900/10">
+                    <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+                        <div class="md:w-1/2 space-y-4">
+                            <span id="floor-badge" class="px-3 py-1 rounded-full text-xs font-bold bg-meadow-200 text-forest border border-meadow-300">
+                                ACTIVE FLOOR: 8F
+                            </span>
+                            <h3 id="floor-map-title" class="text-2xl font-bold text-forest">8F 아이소메트릭 가이드 Map</h3>
+                            <p id="floor-map-desc" class="text-meadow-900/70 text-sm leading-relaxed">
+                                놀이와 리테일이 결합된 8층 공간입니다. 각 테마존 카드를 클릭하면 상세 안내 모달을 확인하실 수 있습니다.
+                            </p>
+                        </div>
+                        <div class="md:w-1/2 w-full flex justify-center">
+                            <div class="relative w-full max-w-md h-56 rounded-2xl bg-meadow-100/80 border border-meadow-200 flex items-center justify-center p-4 text-center overflow-hidden">
+                                <!-- Simulated SVG Isometric Floor Layout Graphic -->
+                                <svg class="w-full h-full text-meadow-600/50" viewBox="0 0 400 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M200 20 L370 100 L200 180 L30 100 Z" stroke="currentColor" stroke-width="2" fill="rgba(95,133,93,0.08)"/>
+                                    <path d="M200 40 L330 100 L200 160 L70 100 Z" stroke="currentColor" stroke-dasharray="4 4"/>
+                                    <circle cx="200" cy="100" r="25" fill="rgba(95,133,93,0.3)" stroke="#486846" stroke-width="2"/>
+                                    <text x="200" y="104" text-anchor="middle" fill="#1C2B1C" font-size="10" font-weight="bold">PLAY PLAZA</text>
+                                    <rect x="90" y="75" width="40" height="30" rx="4" fill="rgba(140,109,83,0.2)" stroke="#8C6D53"/>
+                                    <text x="110" y="93" text-anchor="middle" fill="#1C2B1C" font-size="8">타요존</text>
+                                    <rect x="270" y="75" width="40" height="30" rx="4" fill="rgba(200,216,194,0.5)" stroke="#385237"/>
+                                    <text x="290" y="93" text-anchor="middle" fill="#1C2B1C" font-size="8">티니핑</text>
+                                </svg>
+                                <div class="absolute bottom-3 right-3 text-xs text-meadow-800 bg-white/80 px-2.5 py-1 rounded-lg border border-meadow-200 shadow-sm">
+                                    <i class="fa-solid fa-map"></i> 층별 공간 구조도
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Zone Grid -->
+                <div id="zones-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Dynamic rendering via JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- VIEW 3: EVENTS PAGE                       -->
+        <!-- ========================================== -->
+        <section id="view-events" class="view-section">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl sm:text-4xl font-extrabold text-forest mb-3">단계별 이벤트 & 특별 구역</h2>
+                    <p class="text-meadow-900/70 text-sm max-w-xl mx-auto">사전 홍보부터 오픈 당일, 그리고 사후 혜택까지 이어지는 맞춤형 이벤트</p>
+                </div>
+
+                <!-- Stage Timeline Grid -->
+                <div id="events-timeline" class="space-y-12 mb-20">
+                    <!-- Dynamic rendering via JS -->
+                </div>
+
+                <!-- Special Zones Highlight Header -->
+                <div class="text-center mb-10">
+                    <h3 class="text-2xl font-bold text-forest mb-2">특별 체험 & 혜택 구역</h3>
+                    <p class="text-xs text-meadow-800/70">카드를 마우스 오버(모바일 터치)하면 상세 혜택이 플립되어 나타납니다.</p>
+                </div>
+
+                <!-- Flip Cards Grid -->
+                <div id="special-zones-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <!-- Dynamic rendering via JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- VIEW 4: MAP & DIRECTIONS PAGE             -->
+        <!-- ========================================== -->
+        <section id="view-map" class="view-section">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl sm:text-4xl font-extrabold text-forest mb-3">오시는 길 & 위치 안내</h2>
+                    <p class="text-meadow-900/70 text-sm max-w-xl mx-auto">센텀시티 중심에 위치한 Family CX 백화점으로 찾아오시는 방법입니다.</p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
+                    <!-- Map Canvas / Embed Box -->
+                    <div class="lg:col-span-2 glass-panel rounded-3xl p-4 border border-meadow-900/10 flex flex-col justify-between">
+                        <!-- Interactive Leaflet Map Wrapper -->
+                        <div class="relative w-full h-80 sm:h-[420px] rounded-2xl overflow-hidden border border-meadow-200 shadow-inner group">
+                            <!-- Map Container -->
+                            <div id="leaflet-map" class="w-full h-full z-0"></div>
+
+                            <!-- Map Filter Floating Bar -->
+                            <div class="absolute top-3 left-3 z-[400] flex flex-wrap gap-1.5 bg-white/90 backdrop-blur-md p-1.5 rounded-xl border border-meadow-200 shadow-md text-xs font-semibold">
+                                <button onclick="filterMapMarkers('all')" id="map-btn-all" class="px-2.5 py-1 rounded-lg bg-forest text-cream transition-all">전체</button>
+                                <button onclick="filterMapMarkers('store')" id="map-btn-store" class="px-2.5 py-1 rounded-lg hover:bg-meadow-100 text-forest transition-all"><i class="fa-solid fa-store mr-1 text-meadow-600"></i>백화점</button>
+                                <button onclick="filterMapMarkers('subway')" id="map-btn-subway" class="px-2.5 py-1 rounded-lg hover:bg-meadow-100 text-forest transition-all"><i class="fa-solid fa-subway mr-1 text-emerald-600"></i>지하철</button>
+                                <button onclick="filterMapMarkers('parking')" id="map-btn-parking" class="px-2.5 py-1 rounded-lg hover:bg-meadow-100 text-forest transition-all"><i class="fa-solid fa-square-parking mr-1 text-amber-600"></i>주차장</button>
+                                <button onclick="filterMapMarkers('bus')" id="map-btn-bus" class="px-2.5 py-1 rounded-lg hover:bg-meadow-100 text-forest transition-all"><i class="fa-solid fa-bus mr-1 text-blue-600"></i>버스정류장</button>
+                            </div>
+
+                            <!-- Map Type Toggle & Re-center floating controls -->
+                            <div class="absolute bottom-3 right-3 z-[400] flex space-x-2">
+                                <button onclick="recenterMap()" class="px-3 py-1.5 rounded-xl bg-white/95 hover:bg-meadow-50 text-forest font-bold text-xs shadow-md border border-meadow-200 transition-all flex items-center">
+                                    <i class="fa-solid fa-crosshairs text-meadow-600 mr-1.5"></i> 위치 재설정
+                                </button>
+                                <button onclick="toggleMapTileStyle()" id="tile-toggle-btn" class="px-3 py-1.5 rounded-xl bg-white/95 hover:bg-meadow-50 text-forest font-bold text-xs shadow-md border border-meadow-200 transition-all flex items-center">
+                                    <i class="fa-solid fa-layer-group text-wood mr-1.5"></i> <span id="tile-style-label">모던 지도</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Location Action Buttons -->
+                        <div class="mt-4 flex flex-wrap items-center justify-between gap-3">
+                            <div class="text-sm text-forest font-medium">
+                                <i class="fa-solid fa-location-dot text-meadow-600 mr-2"></i>
+                                <span id="store-address-text">부산광역시 해운대구 센텀중앙로 79</span>
+                            </div>
+                            <div class="flex space-x-2">
+                                <button onclick="copyAddress()" class="px-4 py-2 text-xs font-semibold rounded-xl bg-meadow-200/80 hover:bg-meadow-200 text-forest transition-colors border border-meadow-300">
+                                    <i class="fa-regular fa-copy mr-1"></i> 주소 복사
+                                </button>
+                                <a href="https://map.kakao.com/link/map/Family CX 백화점,35.1741,129.1282" target="_blank" class="px-4 py-2 text-xs font-semibold rounded-xl bg-forest hover:bg-meadow-800 text-cream transition-colors shadow-sm flex items-center">
+                                    <i class="fa-solid fa-route mr-1"></i> 카카오맵 길찾기
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Store Info & Hours Box -->
+                    <div class="glass-panel rounded-3xl p-6 border border-meadow-900/10 flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center justify-between mb-6">
+                                <h3 class="text-xl font-bold text-forest">영업 안내</h3>
+                                <span id="today-status" class="px-3 py-1 rounded-full text-xs font-bold bg-meadow-200 text-forest border border-meadow-300">
+                                    영업 중
+                                </span>
+                            </div>
+
+                            <div class="space-y-4 mb-6">
+                                <div class="p-3.5 rounded-2xl bg-white/60 border border-meadow-200/60">
+                                    <div class="text-xs text-meadow-800/70 mb-1">평일 (월~목)</div>
+                                    <div class="text-sm font-bold text-forest">10:30 ~ 20:00</div>
+                                </div>
+                                <div class="p-3.5 rounded-2xl bg-white/60 border border-meadow-200/60">
+                                    <div class="text-xs text-meadow-800/70 mb-1">주말 · 공휴일 (금~일)</div>
+                                    <div class="text-sm font-bold text-forest">10:00 ~ 20:30</div>
+                                </div>
+                                <div class="p-3.5 rounded-2xl bg-white/60 border border-meadow-200/60">
+                                    <div class="text-xs text-meadow-800/70 mb-1">대표 전화</div>
+                                    <div class="text-sm font-bold text-meadow-700">051-000-0000</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="p-4 rounded-2xl bg-meadow-100 border border-meadow-300 text-xs text-forest font-medium">
+                            <i class="fa-solid fa-circle-info mr-1.5 text-meadow-600"></i> 유아차 대여 및 패밀리 서비스 데스크는 8F 중앙 안내실에서 이용 가능합니다.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Transportation Tabs & Info -->
+                <div class="glass-panel rounded-3xl p-8 border border-meadow-900/10">
+                    <h3 class="text-xl font-bold text-forest mb-6">교통편 및 주차 안내</h3>
+
+                    <!-- Transit Tab Selector -->
+                    <div class="flex flex-wrap gap-2 mb-6 border-b border-meadow-900/10 pb-4">
+                        <button onclick="switchTransit('subway')" id="tab-transit-subway" class="transit-tab px-5 py-2.5 rounded-xl font-bold text-xs bg-forest text-cream transition-all">
+                            <i class="fa-solid fa-subway mr-1"></i> 지하철
+                        </button>
+                        <button onclick="switchTransit('bus')" id="tab-transit-bus" class="transit-tab px-5 py-2.5 rounded-xl font-bold text-xs bg-white/60 text-meadow-900 hover:bg-meadow-100 transition-all">
+                            <i class="fa-solid fa-bus mr-1"></i> 버스
+                        </button>
+                        <button onclick="switchTransit('car')" id="tab-transit-car" class="transit-tab px-5 py-2.5 rounded-xl font-bold text-xs bg-white/60 text-meadow-900 hover:bg-meadow-100 transition-all">
+                            <i class="fa-solid fa-car mr-1"></i> 자가용
+                        </button>
+                        <button onclick="switchTransit('parking')" id="tab-transit-parking" class="transit-tab px-5 py-2.5 rounded-xl font-bold text-xs bg-white/60 text-meadow-900 hover:bg-meadow-100 transition-all">
+                            <i class="fa-solid fa-square-parking mr-1"></i> 주차 정보
+                        </button>
+                    </div>
+
+                    <!-- Transit Content Container -->
+                    <div id="transit-content" class="text-meadow-900/80 text-sm leading-relaxed font-medium">
+                        <!-- Dynamic injection via JS -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Modal Overlay Container -->
+    <div id="app-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-meadow-950/60 backdrop-blur-md opacity-0 pointer-events-none transition-opacity duration-300">
+        <div class="glass-panel w-full max-w-2xl rounded-3xl p-6 sm:p-8 border border-white/40 relative transform scale-95 transition-transform duration-300 bg-cream" id="modal-box">
+            <!-- Close Button -->
+            <button onclick="closeModal()" class="absolute top-6 right-6 w-10 h-10 rounded-full bg-meadow-200/70 hover:bg-meadow-200 text-forest flex items-center justify-center transition-colors">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+
+            <!-- Dynamic Modal Content -->
+            <div id="modal-content"></div>
+        </div>
+    </div>
+
+    <!-- Toast Notification Box -->
+    <div id="toast-box" class="fixed bottom-6 right-6 z-50 hidden glass-panel px-5 py-3.5 rounded-2xl border border-meadow-500/40 text-forest font-bold text-sm shadow-xl flex items-center space-x-2 bg-white">
+        <i class="fa-solid fa-circle-check text-meadow-600"></i>
+        <span id="toast-msg">메시지</span>
+    </div>
+
+    <!-- Footer -->
+    <footer class="glass-panel border-t border-meadow-900/10 mt-20 py-12 bg-meadow-100/50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-6">
+            <div class="text-center md:text-left">
+                <div class="font-outfit font-extrabold text-lg text-forest mb-1">FAMILY RETAIL CX</div>
+                <p class="text-xs text-meadow-900/70">부산광역시 해운대구 센텀중앙로 79 | 대표전화: 051-000-0000</p>
+                <p class="text-xs text-meadow-900/50 mt-1">© 2026 Family Retail Experience Department Store. All rights reserved.</p>
+            </div>
+            <div class="flex space-x-4 text-meadow-700 text-lg">
+                <a href="#" onclick="toast('인스타그램으로 이동합니다.'); return false;" class="hover:text-forest"><i class="fa-brands fa-instagram"></i></a>
+                <a href="#" onclick="toast('유튜브 채널로 이동합니다.'); return false;" class="hover:text-forest"><i class="fa-brands fa-youtube"></i></a>
+                <a href="#" onclick="toast('카카오톡 채널로 이동합니다.'); return false;" class="hover:text-forest"><i class="fa-solid fa-comment"></i></a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript Data and Controller Logic -->
+    <script>
+
+        // Data Structure for Floors
+        const floorsData = [
+            {
+                floor: "8F",
+                title: "PLAY & SHOP",
+                subtitle: "체험 · 놀이 · 쇼핑 복합 공간",
+                color: "#486846",
+                zones: [
+                    {
+                        id: "play-plaza",
+                        name: "PLAY PLAZA",
+                        description: "중앙 광장 형태의 360도 체험 놀이 공간",
+                        icon: "🎡",
+                        features: ["360도 어드벤처 시설", "유아/어린이 구분 놀이 구역", "보호자 휴식 좌석"]
+                    },
+                    {
+                        id: "tayo-zone",
+                        name: "타요존 (TAYO ZONE)",
+                        description: "MOVE TRACK 바닥 트랙 시설",
+                        icon: "🚌",
+                        features: ["타요 캐릭터 전용 구역", "탑승형 놀이 기구", "포토존"]
+                    },
+                    {
+                        id: "teenieping",
+                        name: "티니핑 PLAY WORLD",
+                        description: "티니핑 캐릭터 포토 · 놀이 공간",
+                        icon: "🌸",
+                        features: ["캐릭터 의상 체험", "포토존", "전용 굿즈 판매"]
+                    },
+                    {
+                        id: "family-retail",
+                        name: "패밀리 리테일",
+                        description: "유아동 의류 & 완구 전문 리테일 구역",
+                        icon: "🛍️",
+                        features: ["소아동 전문 브랜드", "체험형 전시 공간", "편의 수유실"]
+                    },
+                    {
+                        id: "home-zone",
+                        name: "홈 · 자동차 존",
+                        description: "홈 인테리어 & 자동차 용품 체험 공간",
+                        icon: "🏠",
+                        features: ["해설/자동차 용품 체험", "인테리어 리빙 쇼룸", "전문 컨설팅"]
+                    }
+                ]
+            },
+            {
+                floor: "9F",
+                title: "REST & VIEW",
+                subtitle: "휴식 · 맛집 · 뷰가 있는 패밀리 공간",
+                color: "#2A3C2A",
+                zones: [
+                    {
+                        id: "food-court",
+                        name: "패밀리 푸드코트",
+                        description: "다양한 메뉴의 확장형 푸드코트",
+                        icon: "🍽️",
+                        features: ["아웃도어 좌석", "이유식/아기 의자 제공", "넓은 복도 & 유아차 구역"]
+                    },
+                    {
+                        id: "view-cafe",
+                        name: "VIEW CAFE",
+                        description: "9층 전망 루프탑 카페",
+                        icon: "☕",
+                        features: ["9층→8층 전망 야외 테라스", "시그니처 음료", "럭셔리 패밀리 카페 분위기"]
+                    }
+                ]
+            }
+        ];
+
+        // Data Structure for Events Timeline
+        const eventsData = [
+            {
+                stage: "Stage 1",
+                period: "D-14 ~ D-1 (사전 단계)",
+                title: "기대감 조성 캠페인",
+                color: "#486846",
+                items: [
+                    { name: "카드뉴스 캠페인", desc: "SNS 인스타그램 릴스 5단계 카드뉴스 배포", icon: "📱" },
+                    { name: "8F/9F 안내 배너", desc: "백화점 입구 및 엘리베이터 주변 안내 그래픽", icon: "🖼️" },
+                    { name: "유아차 전용 안내", desc: "유아차 전용 동선 안내 배너 설치", icon: "🚼" }
+                ]
+            },
+            {
+                stage: "Stage 2",
+                period: "D-Day (오픈 당일)",
+                title: "체험 · 방문 페스티벌",
+                color: "#8C6D53",
+                items: [
+                    { name: "PLAY PLAZA 360도 이벤트", desc: "어드벤처 체험 특별 프로그램 및 포토존 운영", icon: "🎠" },
+                    { name: "패밀리 푸드코트 오픈 이벤트", desc: "아웃도어 좌석 이유식 체험 & 실시간 F&B 할인", icon: "🍱" },
+                    { name: "VIEW CAFE 특별 음료", desc: "9층 오픈 기념 한정 음료, 8층 전망 테라스 개방", icon: "🥤" }
+                ]
+            },
+            {
+                stage: "Stage 3",
+                period: "D+1 ~ D+30 (사후 단계)",
+                title: "재방문 유도 프로그램",
+                color: "#1C3B2B",
+                items: [
+                    { name: "홈·자동차 존 리뷰 이벤트", desc: "체험 후기 SNS 업로드 시 할인 쿠폰 제공", icon: "📸" },
+                    { name: "타요·티니핑 팝업", desc: "주말 한정 캐릭터 이벤트 운영", icon: "🎪" },
+                    { name: "가족 체험 적립", desc: "아이 놀이 활동 참여 시 패밀리 혜택 적립", icon: "🎯" }
+                ]
+            }
+        ];
+
+        // Data Structure for Special Zones
+        const specialZonesData = [
+            { name: "타요 캐릭터 존", desc: "TAYO CHARACTER ZONE - 어린이 전용 체험 구역", tag: "8F", color: "#486846", backDesc: "실내 바닥 트랙에서 캐릭터 자동차 승용 체험 및 기념 촬영이 가능합니다." },
+            { name: "티니핑 플레이 월드", desc: "TEENIEPING PLAY WORLD - 포토 & 놀이", tag: "8F", color: "#8C6D53", backDesc: "인기 티니핑 캐릭터 드레스 착용 체험 및 굿즈 Shop을 만나보세요." },
+            { name: "Wide Aisles & Stroller", desc: "넓은 복도와 전용 유아차 구역", tag: "9F", color: "#5F855D", backDesc: "유아차 2대가 여유롭게 교차하는 쾌적한 보행 동선이 확보되어 있습니다." },
+            { name: "Luxury Family Cafe", desc: "럭셔리 패밀리 카페 & 루프탑 전망", tag: "9F", color: "#1C3B2B", backDesc: "8층 중앙 광장을 한눈에 조망하며 프리미엄 디저트를 즐길 수 있습니다." }
+        ];
+
+        // Transit Information
+        const transitInfo = {
+            subway: "• 2호선 센텀시티역 1번 출구 도보 5분 거리 (지하 연결 통로 이용 가능)",
+            bus: "• 센텀시티 정류장 하차: 시내버스 38, 40, 63, 115, 139, 181, 1001, 1002번",
+            car: "• 부산 도시고속도로 센텀시티 IC 진입 후 약 5분 소요 (해운대 방면)",
+            parking: "• 지하 1층 ~ 지하 5층 주차장 운영 (최대 1,200대 수용)\n• 구매 고객 대상 2시간 무료 주차 지원\n• 유아차 동반 고객 전용 주차 구역 지하 2층 위치"
+        };
+
+        let currentFloor = "8F";
+
+        // Leaflet Map Global Variables
+        let mapInstance = null;
+        let mapMarkers = [];
+        let currentTileStyle = 'voyager';
+        let tileLayerInstance = null;
+
+        const storeCoords = [35.1741, 129.1282]; // 부산 센텀중앙로 79
+
+        const locationsData = [
+            {
+                id: "store",
+                type: "store",
+                title: "Family CX 백화점 (8F·9F)",
+                desc: "부산광역시 해운대구 센텀중앙로 79<br><span class='text-meadow-600 font-bold'>8F Play & Shop / 9F Rest & View</span>",
+                coords: [35.1741, 129.1282],
+                iconHtml: `<div class="w-10 h-10 bg-forest text-cream rounded-full flex items-center justify-center border-2 border-white shadow-lg animate-pulse"><i class="fa-solid fa-store text-sm"></i></div>`
+            },
+            {
+                id: "subway",
+                type: "subway",
+                title: "2호선 센텀시티역 (1번 출구)",
+                desc: "지하철 2호선 센텀시티역 | 지하 연결통로 이용 시 도보 5분",
+                coords: [35.1689, 129.1316],
+                iconHtml: `<div class="w-8 h-8 bg-emerald-600 text-white rounded-full flex items-center justify-center border-2 border-white shadow-md"><i class="fa-solid fa-subway text-xs"></i></div>`
+            },
+            {
+                id: "parking",
+                type: "parking",
+                title: "지하주차장 진입로 (B1~B5)",
+                desc: "유아차 전용 주차구역 B2 위치 | 구매 고객 2시간 무료 주차",
+                coords: [35.1748, 129.1289],
+                iconHtml: `<div class="w-8 h-8 bg-amber-600 text-white rounded-full flex items-center justify-center border-2 border-white shadow-md"><i class="fa-solid fa-square-parking text-xs"></i></div>`
+            },
+            {
+                id: "bus",
+                type: "bus",
+                title: "센텀중앙로 버스정류장",
+                desc: "시내버스 38, 40, 63, 115, 139, 181, 1001, 1002번 하차",
+                coords: [35.1732, 129.1278],
+                iconHtml: `<div class="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center border-2 border-white shadow-md"><i class="fa-solid fa-bus text-xs"></i></div>`
+            }
+        ];
+
+        // SPA View Switcher
+        function switchView(viewName) {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(el => {
+                el.classList.remove('text-forest', 'bg-meadow-100');
+                el.classList.add('text-meadow-900/70');
+            });
+
+            const targetView = document.getElementById(`view-${viewName}`);
+            if(targetView) {
+                targetView.classList.add('active');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+
+            const targetNav = document.getElementById(`nav-${viewName}`);
+            if(targetNav) {
+                targetNav.classList.add('text-forest', 'bg-meadow-100');
+                targetNav.classList.remove('text-meadow-900/70');
+            }
+
+            // Initialize or Refresh Leaflet Map when switching to map view
+            if(viewName === 'map') {
+                setTimeout(() => {
+                    initLeafletMap();
+                    if(mapInstance) {
+                        mapInstance.invalidateSize();
+                    }
+                }, 100);
+            }
+        }
+
+        // Initialize Free Interactive Leaflet Map (OpenStreetMap)
+        function initLeafletMap() {
+            if(mapInstance) return; // Prevent re-initialization
+
+            const mapContainer = document.getElementById('leaflet-map');
+            if(!mapContainer) return;
+
+            // Initialize map view centered at Centum City
+            mapInstance = L.map('leaflet-map', {
+                center: storeCoords,
+                zoom: 16,
+                zoomControl: false
+            });
+
+            // Add standard Zoom Control at bottom left
+            L.control.zoom({ position: 'bottomleft' }).addTo(mapInstance);
+
+            // Set initial tile layer (CartoDB Voyager for a sleek, clean aesthetic)
+            applyTileLayer('voyager');
+
+            // Render all location markers
+            locationsData.forEach(loc => {
+                const customIcon = L.divIcon({
+                    className: 'custom-leaflet-pin',
+                    html: loc.iconHtml,
+                    iconSize: [40, 40],
+                    iconAnchor: [20, 20],
+                    popupAnchor: [0, -20]
+                });
+
+                const marker = L.marker(loc.coords, { icon: customIcon }).addTo(mapInstance);
+                
+                const popupContent = `
+                    <div class="p-1 font-sans text-forest min-w-[200px]">
+                        <h4 class="font-bold text-sm text-forest mb-1">${loc.title}</h4>
+                        <p class="text-xs text-meadow-900/80 font-medium leading-relaxed">${loc.desc}</p>
+                    </div>
+                `;
+                marker.bindPopup(popupContent);
+
+                if(loc.id === 'store') {
+                    marker.openPopup();
+                }
+
+                mapMarkers.push({ id: loc.id, type: loc.type, marker: marker });
+            });
+        }
+
+        // Apply Tile Layer Style
+        function applyTileLayer(style) {
+            if(!mapInstance) return;
+            if(tileLayerInstance) {
+                mapInstance.removeLayer(tileLayerInstance);
+            }
+
+            let tileUrl = '';
+            let attribution = '';
+
+            if(style === 'voyager') {
+                tileUrl = 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
+                attribution = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>';
+            } else {
+                tileUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+                attribution = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+            }
+
+            tileLayerInstance = L.tileLayer(tileUrl, {
+                maxZoom: 19,
+                attribution: attribution
+            }).addTo(mapInstance);
+
+            currentTileStyle = style;
+        }
+
+        // Toggle Tile Map Style
+        function toggleMapTileStyle() {
+            const btnLabel = document.getElementById('tile-style-label');
+            if(currentTileStyle === 'voyager') {
+                applyTileLayer('osm');
+                if(btnLabel) btnLabel.innerText = "OSM 표준 지도";
+                toast('표준 OpenStreetMap 지도로 전환되었습니다.');
+            } else {
+                applyTileLayer('voyager');
+                if(btnLabel) btnLabel.innerText = "모던 지도";
+                toast('모던 스타일 지도로 전환되었습니다.');
+            }
+        }
+
+        // Recenter Map to Main Store
+        function recenterMap() {
+            if(!mapInstance) return;
+            mapInstance.flyTo(storeCoords, 16, { duration: 1 });
+            const storeMarker = mapMarkers.find(m => m.id === 'store');
+            if(storeMarker) {
+                storeMarker.marker.openPopup();
+            }
+            toast('백화점 위치로 이동했습니다.');
+        }
+
+        // Filter Markers by Category
+        function filterMapMarkers(type) {
+            const btnIds = ['all', 'store', 'subway', 'parking', 'bus'];
+            btnIds.forEach(id => {
+                const btn = document.getElementById(`map-btn-${id}`);
+                if(btn) {
+                    if(id === type) {
+                        btn.className = "px-2.5 py-1 rounded-lg bg-forest text-cream transition-all font-semibold";
+                    } else {
+                        btn.className = "px-2.5 py-1 rounded-lg hover:bg-meadow-100 text-forest transition-all font-semibold";
+                    }
+                }
+            });
+
+            const bounds = [];
+            mapMarkers.forEach(item => {
+                if(type === 'all' || item.type === type) {
+                    if(!mapInstance.hasLayer(item.marker)) {
+                        item.marker.addTo(mapInstance);
+                    }
+                    bounds.push(item.marker.getLatLng());
+                } else {
+                    if(mapInstance.hasLayer(item.marker)) {
+                        mapInstance.removeLayer(item.marker);
+                    }
+                }
+            });
+
+            if(bounds.length > 0 && mapInstance) {
+                if(type === 'all') {
+                    mapInstance.flyToBounds(L.latLngBounds(bounds), { padding: [40, 40], duration: 1 });
+                } else if(bounds.length === 1) {
+                    mapInstance.flyTo(bounds[0], 17, { duration: 1 });
+                }
+            }
+        }
+
+        // Mobile Menu Toggle
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            menu.classList.toggle('hidden');
+        }
+
+        document.getElementById('mobile-menu-btn').addEventListener('click', toggleMobileMenu);
+
+        // Floor Filtering Logic
+        function filterFloor(floorName) {
+            currentFloor = floorName;
+            
+            const btn8 = document.getElementById('btn-tab-8F');
+            const btn9 = document.getElementById('btn-tab-9F');
+            const mapTitle = document.getElementById('floor-map-title');
+            const mapDesc = document.getElementById('floor-map-desc');
+            const mapBadge = document.getElementById('floor-badge');
+
+            if(floorName === '8F') {
+                btn8.className = "px-8 py-3 rounded-xl font-bold text-sm transition-all bg-forest text-cream shadow-md";
+                btn9.className = "px-8 py-3 rounded-xl font-bold text-sm transition-all text-meadow-900/70 hover:text-forest";
+                mapBadge.className = "px-3 py-1 rounded-full text-xs font-bold bg-meadow-200 text-forest border border-meadow-300";
+                mapBadge.innerText = "ACTIVE FLOOR: 8F";
+                mapTitle.innerText = "8F 아이소메트릭 가이드 Map";
+                mapDesc.innerText = "놀이와 리테일이 결합된 8층 공간입니다. 각 테마존 카드를 클릭하면 상세 안내 모달을 확인하실 수 있습니다.";
+            } else {
+                btn9.className = "px-8 py-3 rounded-xl font-bold text-sm transition-all bg-forest text-cream shadow-md";
+                btn8.className = "px-8 py-3 rounded-xl font-bold text-sm transition-all text-meadow-900/70 hover:text-forest";
+                mapBadge.className = "px-3 py-1 rounded-full text-xs font-bold bg-sage-200 text-forest border border-sage-300";
+                mapBadge.innerText = "ACTIVE FLOOR: 9F";
+                mapTitle.innerText = "9F 아이소메트릭 가이드 Map";
+                mapDesc.innerText = "탁 트인 휴식과 패밀리 다이닝이 공존하는 9층 공간입니다. 루프탑 카페와 아웃도어 푸드코트를 이용해 보세요.";
+            }
+
+            renderZonesGrid();
+        }
+
+        // Render Zones
+        function renderZonesGrid() {
+            const container = document.getElementById('zones-grid');
+            const floorObj = floorsData.find(f => f.floor === currentFloor);
+            if(!floorObj) return;
+
+            container.innerHTML = floorObj.zones.map(z => `
+                <div onclick="openZoneModal('${z.id}')" class="glass-panel rounded-2xl p-6 glass-panel-hover cursor-pointer border border-meadow-900/10 flex flex-col justify-between group">
+                    <div>
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="text-3xl">${z.icon}</span>
+                            <span class="text-xs font-bold px-2.5 py-1 rounded-full bg-meadow-100 text-forest group-hover:bg-forest group-hover:text-cream transition-colors">
+                                상세 보기 <i class="fa-solid fa-arrow-right ml-1"></i>
+                            </span>
+                        </div>
+                        <h4 class="text-xl font-bold text-forest mb-2">${z.name}</h4>
+                        <p class="text-meadow-900/70 text-sm mb-4 line-clamp-2">${z.description}</p>
+                    </div>
+                    <div class="pt-4 border-t border-meadow-900/10 space-y-1">
+                        ${z.features.map(f => `<div class="text-xs text-meadow-900/80 font-medium"><i class="fa-solid fa-check text-meadow-600 mr-1.5"></i>${f}</div>`).join('')}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Render Events Timeline
+        function renderEventsTimeline() {
+            const container = document.getElementById('events-timeline');
+            container.innerHTML = eventsData.map(ev => `
+                <div class="glass-panel rounded-3xl p-6 sm:p-8 border border-meadow-900/10 relative overflow-hidden">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-meadow-900/10">
+                        <div>
+                            <span class="px-3.5 py-1 rounded-full text-xs font-bold text-cream mb-2 inline-block shadow-sm" style="background-color: ${ev.color}">${ev.stage}</span>
+                            <h3 class="text-2xl font-bold text-forest">${ev.title}</h3>
+                        </div>
+                        <span class="text-sm font-bold text-forest bg-meadow-100 px-4 py-2 rounded-xl border border-meadow-200 w-fit">${ev.period}</span>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        ${ev.items.map(item => `
+                            <div class="p-4 rounded-2xl bg-white/70 border border-meadow-200/60 hover:border-meadow-400 transition-all">
+                                <div class="text-2xl mb-2">${item.icon}</div>
+                                <h5 class="font-bold text-forest text-base mb-1">${item.name}</h5>
+                                <p class="text-xs text-meadow-900/70 leading-relaxed font-medium">${item.desc}</p>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Render Special Flip Cards
+        function renderSpecialZones() {
+            const container = document.getElementById('special-zones-grid');
+            container.innerHTML = specialZonesData.map(z => `
+                <div class="flip-card h-64 perspective-1000 cursor-pointer">
+                    <div class="flip-card-inner">
+                        <!-- Front -->
+                        <div class="flip-card-front glass-panel p-6 border border-meadow-900/10 flex flex-col justify-between bg-white/80">
+                            <div>
+                                <span class="px-2.5 py-1 rounded-md text-xs font-bold text-cream mb-3 inline-block shadow-sm" style="background-color: ${z.color}">${z.tag} SPECIAL</span>
+                                <h4 class="text-lg font-bold text-forest mb-2">${z.name}</h4>
+                                <p class="text-xs text-meadow-900/70 font-medium leading-relaxed">${z.desc}</p>
+                            </div>
+                            <div class="text-xs text-meadow-700 flex items-center justify-end font-bold">
+                                마우스 호버하여 상세보기 <i class="fa-solid fa-rotate mr-1 ml-1"></i>
+                            </div>
+                        </div>
+                        <!-- Back -->
+                        <div class="flip-card-back glass-panel p-6 border border-meadow-500/40 flex flex-col justify-between bg-forest text-cream">
+                            <div>
+                                <h5 class="font-bold text-base text-meadow-200 mb-2">${z.name} 상세 안내</h5>
+                                <p class="text-xs text-meadow-100 leading-relaxed font-medium">${z.backDesc}</p>
+                            </div>
+                            <button onclick="switchView('floors')" class="w-full py-2 rounded-xl bg-meadow-500 text-cream text-xs font-bold hover:bg-meadow-600 transition-colors shadow-sm">
+                                해당 층으로 이동
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Modal Logic
+        function openZoneModal(zoneId) {
+            let zoneObj = null;
+            floorsData.forEach(f => {
+                const found = f.zones.find(z => z.id === zoneId);
+                if(found) zoneObj = found;
+            });
+
+            if(!zoneObj) return;
+
+            const modalContent = document.getElementById('modal-content');
+            modalContent.innerHTML = `
+                <div class="text-3xl mb-3">${zoneObj.icon}</div>
+                <h3 class="text-2xl font-bold text-forest mb-2">${zoneObj.name}</h3>
+                <p class="text-sm text-meadow-900/70 mb-6 leading-relaxed font-medium">${zoneObj.description}</p>
+                
+                <h4 class="text-xs font-bold uppercase tracking-wider text-meadow-700 mb-3">주요 구성 및 혜택</h4>
+                <div class="space-y-2 mb-8">
+                    ${zoneObj.features.map(f => `
+                        <div class="p-3 rounded-xl bg-meadow-100/70 border border-meadow-200 text-xs text-forest font-semibold flex items-center">
+                            <i class="fa-solid fa-leaf text-meadow-600 mr-2.5"></i> ${f}
+                        </div>
+                    `).join('')}
+                </div>
+
+                <div class="flex justify-end space-x-3">
+                    <button onclick="closeModal()" class="px-5 py-2.5 rounded-xl bg-meadow-200/80 text-forest text-xs font-bold hover:bg-meadow-200">닫기</button>
+                    <button onclick="toast('위치 확인이 완료되었습니다.'); closeModal();" class="px-5 py-2.5 rounded-xl bg-forest text-cream text-xs font-bold hover:bg-meadow-800 shadow-sm">위치 즐겨찾기</button>
+                </div>
+            `;
+
+            showModal();
+        }
+
+        function showModal() {
+            const modal = document.getElementById('app-modal');
+            modal.classList.add('modal-active');
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('app-modal');
+            modal.classList.remove('modal-active');
+        }
+
+        // Transit Selector Logic
+        function switchTransit(type) {
+            document.querySelectorAll('.transit-tab').forEach(btn => {
+                btn.className = "transit-tab px-5 py-2.5 rounded-xl font-bold text-xs bg-white/60 text-meadow-900 hover:bg-meadow-100 transition-all";
+            });
+
+            const activeTab = document.getElementById(`tab-transit-${type}`);
+            if(activeTab) {
+                activeTab.className = "transit-tab px-5 py-2.5 rounded-xl font-bold text-xs bg-forest text-cream transition-all";
+            }
+
+            const contentBox = document.getElementById('transit-content');
+            contentBox.innerHTML = `<p class="whitespace-pre-line leading-relaxed">${transitInfo[type]}</p>`;
+        }
+
+        // Address Copy Utility
+        function copyAddress() {
+            const addr = "부산광역시 해운대구 센텀중앙로 79";
+            const tempInput = document.createElement("input");
+            tempInput.value = addr;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand("copy");
+            document.body.removeChild(tempInput);
+            toast('주소가 클립보드에 복사되었습니다!');
+        }
+
+        // Toast Notification System
+        function toast(message) {
+            const box = document.getElementById('toast-box');
+            const msgSpan = document.getElementById('toast-msg');
+            msgSpan.innerText = message;
+            box.classList.remove('hidden');
+            setTimeout(() => {
+                box.classList.add('hidden');
+            }, 2500);
+        }
+
+        // Initial Initialization on DOM Ready
+        window.addEventListener('DOMContentLoaded', () => {
+            filterFloor('8F');
+            renderEventsTimeline();
+            renderSpecialZones();
+            switchTransit('subway');
+        });
+    </script>
+</body>
+</html>
